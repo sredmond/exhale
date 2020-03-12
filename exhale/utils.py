@@ -110,6 +110,7 @@ AVAILABLE_KINDS = [
     "file",
     "function",
     "group",  # unused
+    "interface",
     "namespace",
     "struct",
     "typedef",
@@ -127,6 +128,7 @@ LEAF_LIKE_KINDS = [
     "enum",
     "function",
     "class",
+    "interface",
     "struct",
     "typedef",
     "union",
