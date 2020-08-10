@@ -407,6 +407,8 @@ def qualifyKind(kind):
     +-------------+------------------+
     | "group"     | "Group"          |
     +-------------+------------------+
+    | "interface" | "Interface"      |
+    +-------------+------------------+
     | "namespace" | "Namespace"      |
     +-------------+------------------+
     | "struct"    | "Struct"         |
@@ -463,6 +465,8 @@ def kindAsBreatheDirective(kind):
     | "function"  | "doxygenfunction"  |
     +-------------+--------------------+
     | "group"     | "doxygengroup"     |
+    +-------------+--------------------+
+    | "interface" | "doxygeninterface" |
     +-------------+--------------------+
     | "namespace" | "doxygennamespace" |
     +-------------+--------------------+
