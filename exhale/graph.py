@@ -949,6 +949,9 @@ class ExhaleRoot(object):
         ``groups`` (list)
             The full list of ExhaleNodes of kind ``group``.  Pupulated, not used.
 
+        ``interfaces`` (list)
+            The full list of ExhaleNodes of kind ``interface``.
+
         ``namespaces`` (list)
             The full list of ExhaleNodes of kind ``namespace``.
 
@@ -1008,6 +1011,8 @@ class ExhaleRoot(object):
         # the future?                         |
         # doxygengroup     <-+-> "group"      |
         self.groups          = []           # |
+        # doxygeninterface <-+-> "interface"  |
+        self.interfaces      = []           # |
         # doxygennamespace <-+-> "namespace"  |
         self.namespaces      = []           # |
         # doxygentypedef   <-+-> "typedef"    |
@@ -1514,6 +1519,8 @@ class ExhaleRoot(object):
                 self.variables.append(node)
             elif node.kind == "group":
                 self.groups.append(node)
+            elif node.kind == "interface":
+                self.interfaces.append(node)
             elif node.kind == "typedef":
                 self.typedefs.append(node)
             elif node.kind == "union":
@@ -1815,7 +1822,7 @@ class ExhaleRoot(object):
 
         # now that we have parsed all the listed refid's in the doxygen xml, reparent
         # the nodes that we care about
-        allowable_child_kinds = ["struct", "class", "function", "typedef", "define", "enum", "union"]
+        allowable_child_kinds = ["struct", "class", "function", "interface", "typedef", "define", "enum", "union"]
         for f in self.files:
             for match_refid in doxygen_xml_file_ownerships[f]:
                 child = self.node_by_refid[match_refid]
@@ -1834,7 +1841,7 @@ class ExhaleRoot(object):
                 for child in n.children:
                     if child.kind == "enum"     or child.kind == "variable" or \
                        child.kind == "function" or child.kind == "typedef"  or \
-                       child.kind == "union":
+                       child.kind == "union"    or child.kind == "interface":
                         potential_orphans.append(child)
 
             # now that we have a list of potential orphans, see if this doxygen xml had
@@ -2025,6 +2032,7 @@ class ExhaleRoot(object):
         self.enum_values.sort()
         self.functions.sort()
         self.groups.sort()
+        self.interfaces.sort()
         self.typedefs.sort()
         self.variables.sort()
 
@@ -2124,8 +2132,8 @@ class ExhaleRoot(object):
         '''
         Creates all of the reStructuredText documents related to types parsed by
         Doxygen.  This includes all leaf-like documents (``class``, ``struct``,
-        ``enum``, ``typedef``, ``union``, ``variable``, and ``define``), as well as
-        namespace, file, and directory pages.
+        ``enum``, ``typedef``, ``interface``, ``union``, ``variable``, and
+        ``define``), as well as namespace, file, and directory pages.
 
         During the reparenting phase of the parsing process, nested items were added as
         a child to their actual parent.  For classes, structs, enums, and unions, if
@@ -2731,8 +2739,8 @@ class ExhaleRoot(object):
         Helper method for :func:`~exhale.graph.ExhaleRoot.generateSingleNamespace`, and
         :func:`~exhale.graph.ExhaleRoot.generateFileNodeDocuments`.  Builds the
         body text for the namespace node document that links to all of the child
-        namespaces, structs, classes, functions, typedefs, unions, and variables
-        associated with this namespace.
+        namespaces, structs, classes, functions, typedefs, interfaces, unions,
+        and variables associated with this namespace.
 
         :Parameters:
             ``nspace`` (ExhaleNode)
@@ -2746,6 +2754,7 @@ class ExhaleRoot(object):
         nsp_nested_class_like = []
         nsp_enums             = []
         nsp_functions         = []
+        nsp_interfaces        = []
         nsp_typedefs          = []
         nsp_unions            = []
         nsp_variables         = []
@@ -2768,6 +2777,8 @@ class ExhaleRoot(object):
                 nsp_enums.append(child)
             elif child.kind == "function":
                 nsp_functions.append(child)
+            elif child.kind == "interface":
+                nsp_interfaces.append(child)
             elif child.kind == "typedef":
                 nsp_typedefs.append(child)
             elif child.kind == "union":
@@ -2781,6 +2792,7 @@ class ExhaleRoot(object):
         self.generateSortedChildListString(children_stream, "Classes", nsp_nested_class_like)
         self.generateSortedChildListString(children_stream, "Enums", nsp_enums)
         self.generateSortedChildListString(children_stream, "Functions", nsp_functions)
+        self.generateSortedChildListString(children_stream, "Interfaces", nsp_interfaces)
         self.generateSortedChildListString(children_stream, "Typedefs", nsp_typedefs)
         self.generateSortedChildListString(children_stream, "Unions", nsp_unions)
         self.generateSortedChildListString(children_stream, "Variables", nsp_variables)
@@ -2993,6 +3005,7 @@ class ExhaleRoot(object):
             file_classes    = []
             file_enums      = []
             file_functions  = []
+            file_interfaces = []
             file_typedefs   = []
             file_unions     = []
             file_variables  = []
@@ -3006,6 +3019,8 @@ class ExhaleRoot(object):
                     file_enums.append(child)
                 elif child.kind == "function":
                     file_functions.append(child)
+                elif child.kind == "interface":
+                    file_interfaces.append(child)
                 elif child.kind == "typedef":
                     file_typedefs.append(child)
                 elif child.kind == "union":
@@ -3022,6 +3037,7 @@ class ExhaleRoot(object):
             self.generateSortedChildListString(children_stream, "Enums", file_enums)
             self.generateSortedChildListString(children_stream, "Functions", file_functions)
             self.generateSortedChildListString(children_stream, "Defines", file_defines)
+            self.generateSortedChildListString(children_stream, "Interfaces", file_interfaces)
             self.generateSortedChildListString(children_stream, "Typedefs", file_typedefs)
             self.generateSortedChildListString(children_stream, "Unions", file_unions)
             self.generateSortedChildListString(children_stream, "Variables", file_variables)
@@ -3622,6 +3638,7 @@ class ExhaleRoot(object):
         - Variables
         - Defines
         - Typedefs
+        - Interfaces
         - Directories
         - Files
         '''
@@ -3693,6 +3710,7 @@ class ExhaleRoot(object):
                 ("Variables", "variable"),
                 ("Defines", "define"),
                 ("Typedefs", "typedef"),
+                ("Interfaces", "interface"),
                 ("Directories", "dir"),
                 ("Files", "file")
             ]
@@ -3789,7 +3807,8 @@ class ExhaleRoot(object):
             "namespace": utils.AnsiColors.BOLD_CYAN,
             "typedef":   utils.AnsiColors.BOLD_YELLOW,
             "union":     utils.AnsiColors.BOLD_MAGENTA,
-            "variable":  utils.AnsiColors.BOLD_CYAN
+            "variable":  utils.AnsiColors.BOLD_CYAN,
+            "interface": utils.AnsiColors.BOLD_YELLOW,
         }
 
         self.consoleFormat(
@@ -3853,6 +3872,11 @@ class ExhaleRoot(object):
         self.consoleFormat(
             utils._use_color("Variables", fmt_spec["variable"], sys.stderr),
             self.variables,
+            fmt_spec
+        )
+        self.consoleFormat(
+            utils._use_color("Interfaces", fmt_spec["interface"], sys.stderr),
+            self.interfaces,
             fmt_spec
         )
 
